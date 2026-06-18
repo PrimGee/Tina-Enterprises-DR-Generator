@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TINA ENTERPRISES — DR Excel Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+:root{
+  --navy:#0a1628;--navy-mid:#132340;--navy-light:#1e3a5f;
+  --gold:#c9a84c;--gold-light:#e8c97a;--gold-pale:#faf6ec;
+  --cream:#faf8f3;--white:#fff;
+  --gray-100:#f5f5f0;--gray-200:#e8e8e0;--gray-400:#9e9e90;--gray-600:#5a5a50;
+  --success:#2d7a4f;--warning:#c97a2d;--danger:#c93030;
+  --radius:12px;--shadow:0 4px 24px rgba(10,22,40,.1);--shadow-lg:0 8px 48px rgba(10,22,40,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Source Sans 3',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;font-size:16px;}
+
+/* LAYOUT */
+.wrapper{max-width:1000px;margin:0 auto;padding:32px 20px;}
+.top-bar{display:flex;align-items:center;gap:16px;margin-bottom:36px;}
+.logo{background:var(--navy);color:var(--gold);padding:10px 18px;border-radius:8px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;line-height:1.3;}
+.logo small{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gray-400);font-family:'Source Sans 3',sans-serif;font-weight:400;}
+.top-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--navy);}
+.top-sub{font-size:13px;color:var(--gray-400);}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:36px;background:var(--white);border-radius:var(--radius);padding:20px 28px;box-shadow:var(--shadow);}
+.step{display:flex;align-items:center;gap:10px;flex:1;}
+.step-num{width:34px;height:34px;border-radius:50%;background:var(--gray-200);color:var(--gray-400);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;transition:all .3s;}
+.step-text{font-size:13px;color:var(--gray-400);font-weight:500;transition:color .3s;}
+.step.done .step-num{background:var(--success);color:white;}
+.step.done .step-text{color:var(--success);}
+.step.active .step-num{background:var(--gold);color:var(--navy);}
+.step.active .step-text{color:var(--navy);font-weight:700;}
+.step-sep{width:40px;height:2px;background:var(--gray-200);flex-shrink:0;margin:0 4px;}
+
+/* CARD */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;}
+.card-header{padding:20px 28px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.card-header h2{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy);}
+.card-body{padding:28px;}
+
+/* DROP ZONE */
+.drop-zone{border:2.5px dashed var(--gold);border-radius:var(--radius);padding:60px 32px;text-align:center;background:var(--gold-pale);cursor:pointer;transition:all .3s;}
+.drop-zone:hover,.drop-zone.dragover{background:rgba(201,168,76,.15);transform:scale(1.01);}
+.drop-zone .dz-icon{font-size:56px;margin-bottom:14px;}
+.drop-zone h3{font-size:22px;color:var(--navy);margin-bottom:8px;font-family:'Playfair Display',serif;}
+.drop-zone p{font-size:14px;color:var(--gray-400);}
+
+/* PREVIEW */
+.preview-box{display:flex;gap:16px;align-items:flex-start;padding:16px;background:var(--gray-100);border-radius:10px;margin-top:16px;}
+.preview-img{max-width:180px;max-height:180px;border-radius:8px;border:1px solid var(--gray-200);object-fit:contain;}
+.preview-info h4{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.preview-info p{font-size:13px;color:var(--gray-400);}
+
+/* STATUS */
+.status-bar{background:var(--navy);color:var(--gold);padding:14px 20px;border-radius:10px;display:flex;align-items:center;gap:12px;margin-top:16px;font-size:14px;font-weight:600;}
+.spinner{width:20px;height:20px;border:3px solid rgba(201,168,76,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.form-group{margin-bottom:18px;}
+.form-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-600);margin-bottom:7px;}
+.form-control{width:100%;padding:12px 16px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:15px;color:var(--navy);background:var(--white);transition:border-color .2s;}
+.form-control:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin-top:4px;}
+table.items-tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:640px;}
+table.items-tbl th{background:var(--navy);color:var(--gold);padding:11px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+table.items-tbl td{padding:10px 12px;border-bottom:1px solid var(--gray-200);vertical-align:middle;}
+table.items-tbl tr:hover td{background:var(--gold-pale);}
+table.items-tbl tfoot td{background:var(--navy);color:var(--gold);font-weight:700;padding:11px 12px;}
+.inline-inp{border:1.5px solid var(--gray-200);border-radius:6px;padding:8px 10px;font-family:'Source Sans 3',sans-serif;font-size:13px;width:100%;background:white;color:var(--navy);}
+.inline-inp:focus{outline:none;border-color:var(--gold);}
+.inline-inp.gold{border-color:rgba(201,168,76,.6);background:var(--gold-pale);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;border:none;}
+.btn-primary{background:var(--gold);color:var(--navy);}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);}
+.btn-outline{background:transparent;color:var(--navy);border:2px solid var(--navy);}
+.btn-outline:hover{background:var(--navy);color:var(--white);}
+.btn-success{background:var(--success);color:white;}
+.btn-success:hover{opacity:.9;transform:translateY(-1px);}
+.btn-sm{padding:8px 16px;font-size:13px;}
+.btn-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;padding:4px 8px;}
+.btn-del:hover{transform:scale(1.2);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.badge-gold{background:rgba(201,168,76,.15);color:#8a6800;}
+.badge-success{background:rgba(45,122,79,.12);color:var(--success);}
+
+/* RESULT */
+.result-card{background:linear-gradient(135deg,var(--navy),var(--navy-mid));border-radius:var(--radius);padding:32px;color:white;text-align:center;margin-bottom:24px;}
+.result-card h2{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold);margin-bottom:10px;}
+.result-card p{color:rgba(255,255,255,.7);font-size:15px;margin-bottom:24px;}
+.result-sheets{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+.sheet-pill{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);color:var(--gold-light);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;}
+
+/* TOAST */
+.toast-cont{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px;}
+.toast{background:var(--navy);color:white;padding:14px 20px;border-radius:10px;font-size:14px;box-shadow:var(--shadow-lg);border-left:4px solid var(--gold);animation:toastIn .3s ease;min-width:260px;}
+.toast.err{border-left-color:var(--danger);}
+@keyframes toastIn{from{transform:translateX(110px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* SECTIONS */
+.page-section{display:none;}.page-section.active{display:block;animation:fadeUp .25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* INFO BOX */
+.info-box{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--gray-600);margin-bottom:20px;line-height:1.6;}
+.info-box strong{color:var(--navy);}
+
+/* RESPONSIVE */
+@media(max-width:680px){
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid-3{grid-template-columns:1fr 1fr;}
+  .stepper{padding:14px;}
+  .step-text{font-size:11px;}
+  .step-sep{width:20px;}
+  .wrapper{padding:16px 12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">TINA ENTERPRISES<small>Balo-i, Lanao del Norte</small></div>
+    <div>
+      <div class="top-title">DR Excel Generator</div>
+      <div class="top-sub">Upload PO → AI Extracts Items → Download DR_File · DR_Print · DR_History</div>
+    </div>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step active" id="st1"><div class="step-num">1</div><div class="step-text">Upload PO</div></div>
+    <div class="step-sep"></div>
+    <div class="step" id="st2"><div class="step-num">2</div><div class="step-text">Review &amp; Edit</div></div>
+    <div class="step-sep"></div>
+    <div class="step" id="st3"><div class="step-num">3</div><div class="step-text">Download Excel</div></div>
+  </div>
+
+  <!-- ===== STEP 1: UPLOAD ===== -->
+  <div class="page-section active" id="sec-upload">
+    <div class="card">
+      <div class="card-header"><h2>📥 Step 1 — Upload Purchase Order</h2></div>
+      <div class="card-body">
+
+        <div class="drop-zone" id="drop-zone"
+             ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"
+             onclick="document.getElementById('file-inp').click()">
+          <div class="dz-icon">📄</div>
+          <h3>Drag &amp; Drop PO File Here</h3>
+          <p>Supports PDF, JPG, PNG &nbsp;·&nbsp; Click to browse</p>
+          <input type="file" id="file-inp" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="onFileSelect(event)">
+        </div>
+
+        <div id="file-preview" style="display:none;"></div>
+
+        <div id="extract-status" style="display:none;" class="status-bar">
+          <div class="spinner"></div>
+          <span id="extract-msg">Scanning PO with AI — extracting items…</span>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+          <button class="btn btn-outline btn-sm" onclick="skipToManual()">✏️ Enter Manually Instead</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: REVIEW ===== -->
+  <div class="page-section" id="sec-review">
+    <div class="card">
+      <div class="card-header">
+        <h2>✏️ Step 2 — Review &amp; Complete Details</h2>
+        <span class="badge badge-gold" id="po-source-badge"></span>
+      </div>
+      <div class="card-body">
+
+        <div class="info-box">
+          <strong>📋 Instructions:</strong> Check the extracted data below. Edit any field as needed.
+          Gold-highlighted cells are editable. Fill in the <strong>DR Number</strong> and <strong>DR Date</strong> before generating.
+        </div>
+
+        <!-- PO HEADER -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Customer / School *</label>
+            <input class="form-control" id="f-customer" placeholder="e.g. Balo-i National High School">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input class="form-control" id="f-address" placeholder="Delivery address">
+          </div>
+          <div class="form-group">
+            <label class="form-label">PO Number *</label>
+            <input class="form-control" id="f-po-number" placeholder="e.g. PO-2026-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">PO Date *</label>
+            <input class="form-control" type="date" id="f-po-date">
+          </div>
+          <div class="form-group" style="border-left:3px solid var(--gold);padding-left:14px;background:var(--gold-pale);border-radius:0 8px 8px 0;">
+            <label class="form-label">DR Number * (You assign this)</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="form-control" id="f-dr-number" placeholder="DR-260618-01" style="border-color:var(--gold);">
+              <button type="button" class="btn btn-outline btn-sm" onclick="autoFillDRNumber()" title="Auto-generate from today's date" style="white-space:nowrap;flex-shrink:0;">⚡ Auto</button>
+            </div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:5px;">Format: DR-YYMMDD-NN &nbsp;·&nbsp; e.g. DR-260618-01 means delivery #1 on June 18, 2026</div>
+          </div>
+          <div class="form-group" style="border-left:1px solid var(--gray-200);padding-left:14px;">
+            <label class="form-label">DR Date — fill in upon delivery only</label>
+            <input class="form-control" type="date" id="f-dr-date">
+            <div style="font-size:11px;color:var(--gray-400);margin-top:5px;">Leave blank now. Receiver fills this in when items are accepted.</div>
+          </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--navy);border-bottom:1px solid var(--gray-200);padding-bottom:6px;flex:1;">📦 Items from Purchase Order</div>
+          <button class="btn btn-outline btn-sm" onclick="addItemRow()">＋ Add Row</button>
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="items-tbl">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th>Description</th>
+                <th style="width:75px">Unit</th>
+                <th style="width:100px">PO Qty</th>
+                <th style="width:130px">Unit Cost (₱)</th>
+                <th style="width:130px">PO Amount (₱)</th>
+                <th style="width:120px">Today Qty</th>
+                <th style="width:38px"></th>
+              </tr>
+            </thead>
+            <tbody id="items-body"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5" style="text-align:right;">PO TOTAL</td>
+                <td id="total-po-amt">₱0.00</td>
+                <td id="total-today-qty">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div style="margin-top:28px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="goBack()">← Back</button>
+          <button class="btn btn-primary" onclick="generateExcel()">📊 Generate Excel (DR_File + DR_Print + DR_History)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: DOWNLOAD ===== -->
+  <div class="page-section" id="sec-download">
+    <div class="result-card">
+      <div style="font-size:56px;margin-bottom:12px;">✅</div>
+      <h2>Excel File Generated!</h2>
+      <p>Your Excel workbook has been created with all 3 sheets below.<br>Click the download button to save it.</p>
+      <div class="result-sheets">
+        <div class="sheet-pill">📋 DR_File</div>
+        <div class="sheet-pill">🖨️ DR_Print</div>
+        <div class="sheet-pill">📜 DR_History</div>
+      </div>
+      <button class="btn btn-success" onclick="downloadExcel()" style="font-size:17px;padding:16px 36px;">
+        💾 Download Excel Workbook
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>📋 Summary of Generated File</h2></div>
+      <div class="card-body" id="summary-body"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn btn-outline" onclick="resetApp()">🔄 Generate Another DR</button>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<div class="toast-cont" id="toast-cont"></div>
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+let state = {
+  fileData: null,
+  fileType: null,
+  fileName: null,
+  extractedItems: [],
+  xlsxBuffer: null
+};
+let itemCounter = 0;
+
+// ================================================================
+// DR NUMBER AUTO-FILL
+// ================================================================
+function autoFillDRNumber() {
+  const today = new Date();
+  const yy = String(today.getFullYear()).slice(2);
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const generated = `DR-${yy}${mm}${dd}-01`;
+  const inp = document.getElementById('f-dr-number');
+  if (!inp) return;
+  inp.value = generated;
+  inp.focus();
+  inp.setSelectionRange(generated.length - 2, generated.length);
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-po-date').value = todayStr();
+  // DR Date intentionally left blank — filled in upon delivery only
+});
+
+// ================================================================
+// IMAGE COMPRESSION (keeps payload under Netlify's 6MB limit)
+// ================================================================
+async function compressImage(dataUrl, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else                  { width  = Math.round(width  * maxDim / height); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ================================================================
+// FILE HANDLING
+// ================================================================
+function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
+function onDragLeave()  { document.getElementById('drop-zone').classList.remove('dragover'); }
+function onDrop(e)      { e.preventDefault(); onDragLeave(); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); }
+function onFileSelect(e){ if (e.target.files[0]) handleFile(e.target.files[0]); }
+
+function handleFile(file) {
+  state.fileName = file.name;
+  state.fileType = file.type;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const origDataUrl = e.target.result;
+
+    // Compress images before sending to keep payload under server limits
+    let sendDataUrl = origDataUrl;
+    let sendType    = state.fileType;
+    if (file.type.startsWith('image/')) {
+      sendDataUrl = await compressImage(origDataUrl);
+      sendType    = 'image/jpeg';
+    }
+    state.fileData = sendDataUrl.split(',')[1]; // base64 of (possibly compressed) image
+    state.fileType = sendType;
+
+    const prev = document.getElementById('file-preview');
+    if (file.type.startsWith('image/')) {
+      prev.innerHTML = `<div class="preview-box">
+        <img class="preview-img" src="${origDataUrl}">
+        <div class="preview-info">
+          <h4>${esc(file.name)}</h4>
+          <p>${(file.size/1024).toFixed(1)} KB · ${file.type}</p>
+          <p style="margin-top:8px;color:var(--success);font-weight:600;">✅ File loaded — extracting items…</p>
+        </div>
+      </div>`;
+    } else {
+      prev.innerHTML = `<div class="preview-box">
+        <div style="font-size:48px;flex-shrink:0;">📄</div>
+        <div class="preview-info">
+          <h4>${esc(file.name)}</h4>
+          <p>PDF · ${(file.size/1024).toFixed(1)} KB</p>
+          <p style="margin-top:8px;color:var(--success);font-weight:600;">✅ File loaded — extracting items…</p>
+        </div>
+      </div>`;
+    }
+    prev.style.display = 'block';
+    document.getElementById('extract-status').style.display = 'flex';
+
+    await extractPOWithClaude();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ================================================================
+// CLAUDE API EXTRACTION (via Netlify Function — key is server-side)
+// ================================================================
+function normalizeMediaType(raw, fileName) {
+  if (raw === 'image/jpg' || (!raw && /\.jpe?g$/i.test(fileName))) return 'image/jpeg';
+  if (!raw && /\.png$/i.test(fileName)) return 'image/png';
+  if (!raw && /\.pdf$/i.test(fileName)) return 'application/pdf';
+  return raw || 'image/jpeg';
+}
+
+async function extractPOWithClaude() {
+  document.getElementById('extract-msg').textContent = 'Scanning PO with AI — reading items…';
+
+  const mediaType = normalizeMediaType(state.fileType, state.fileName || '');
+  const isImage   = mediaType.startsWith('image/');
+
+  const contentBlock = isImage
+    ? { type: 'image',    source: { type: 'base64', media_type: mediaType, data: state.fileData } }
+    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: state.fileData } };
+
+  try {
+    const res = await fetch('/api/extract', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            contentBlock,
+            {
+              type: 'text',
+              text: `You are a data extraction assistant for TINA ENTERPRISES, a Philippine business.
+Extract ALL information visible in this Purchase Order image/document.
+
+Return ONLY a single valid JSON object — no markdown, no backticks, no explanation before or after:
+{
+  "customer": "full customer or school name",
+  "address": "full address if visible, else empty string",
+  "po_number": "PO number — look for labels: PO No., P.O. No., Purchase Order No., Reference No.",
+  "po_date": "date in YYYY-MM-DD format if found, else empty string",
+  "items": [
+    {
+      "description": "complete item description exactly as written",
+      "unit": "unit of measure such as pcs, sets, reams, boxes, units, rolls, gal, piece, pack",
+      "qty": <quantity as plain number, e.g. 10>,
+      "unit_cost": <unit price as plain number, e.g. 250.00, use 0 if not shown>
+    }
+  ]
+}
+
+RULES:
+- Include EVERY line item — do not skip any rows from the table
+- Numbers must be plain numbers (not strings): "qty": 10 not "qty": "10"
+- If a field is not visible, use 0 for numbers or "" for strings
+- Do NOT include any text outside the JSON object`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!res.ok) {
+      let errBody = '';
+      try { const e = await res.json(); errBody = e.error?.message || JSON.stringify(e); } catch {}
+      throw new Error(`API error ${res.status}: ${errBody}`);
+    }
+
+    const data = await res.json();
+    const raw = data.content
+      .filter(c => c.type === 'text')
+      .map(c => c.text)
+      .join('')
+      .trim();
+
+    if (!raw) throw new Error('AI returned an empty response. Please try again or enter manually.');
+
+    let parsed;
+    try {
+      const clean = raw.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        try { parsed = JSON.parse(match[0]); }
+        catch { throw new Error('Could not read AI response as JSON. Raw: ' + raw.slice(0, 200)); }
+      } else {
+        throw new Error('No JSON found in AI response. Raw: ' + raw.slice(0, 200));
+      }
+    }
+
+    if (!parsed.items || !Array.isArray(parsed.items)) parsed.items = [];
+
+    document.getElementById('extract-status').style.display = 'none';
+    populateForm(parsed);
+    const count = parsed.items.length;
+    toast(`✅ Extracted ${count} item${count !== 1 ? 's' : ''} from PO! Review below.`);
+    document.getElementById('po-source-badge').textContent = `🤖 AI Extracted (${count} items)`;
+
+  } catch (err) {
+    document.getElementById('extract-status').style.display = 'none';
+    toast('⚠️ ' + err.message + ' — Enter items manually.', 'err');
+    document.getElementById('po-source-badge').textContent = '✏️ Manual Entry';
+    populateForm({ customer:'', address:'', po_number:'', po_date: todayStr(), items:[] });
+  }
+
+  goToStep2();
+}
+
+function populateForm(data) {
+  setVal('f-customer',  data.customer  || '');
+  setVal('f-address',   data.address   || '');
+  setVal('f-po-number', data.po_number || '');
+  setVal('f-po-date',   data.po_date && data.po_date.length === 10 ? data.po_date : todayStr());
+  setVal('f-dr-date',   ''); // left blank — filled upon delivery
+
+  document.getElementById('items-body').innerHTML = '';
+  itemCounter = 0;
+
+  if (data.items && data.items.length) {
+    data.items.forEach(item => addItemRow(item));
+  } else {
+    addItemRow();
+  }
+  recalcTotals();
+}
+
+function skipToManual() {
+  document.getElementById('po-source-badge').textContent = '✏️ Manual Entry';
+  populateForm({ customer:'', address:'', po_number:'', po_date: todayStr(), items:[] });
+  goToStep2();
+}
+
+// ================================================================
+// ITEMS TABLE
+// ================================================================
+function addItemRow(data={}) {
+  itemCounter++;
+  const n    = itemCounter;
+  const qty  = data.qty       || 0;
+  const cost = data.unit_cost || 0;
+  const amt  = qty * cost;
+
+  const tr = document.createElement('tr');
+  tr.id = `row-${n}`;
+  tr.innerHTML = `
+    <td style="color:var(--gray-400);font-size:12px;">${n}</td>
+    <td><input class="inline-inp gold" id="d-${n}" value="${esc(data.description||'')}" placeholder="Item description" style="min-width:170px;"></td>
+    <td><input class="inline-inp gold" id="u-${n}" value="${esc(data.unit||'pcs')}" style="width:65px;"></td>
+    <td><input class="inline-inp gold" type="number" id="q-${n}" value="${qty||''}" placeholder="0" min="0" oninput="calcRow(${n})" style="width:88px;text-align:right;"></td>
+    <td><input class="inline-inp gold" type="number" id="c-${n}" value="${cost||''}" placeholder="0.00" min="0" step="0.01" oninput="calcRow(${n})" style="width:118px;text-align:right;"></td>
+    <td id="a-${n}" style="font-weight:600;text-align:right;">${fmtN(amt)}</td>
+    <td><input class="inline-inp gold" type="number" id="tq-${n}" value="${qty||''}" placeholder="0" min="0" oninput="recalcTotals()" style="width:100px;text-align:right;"></td>
+    <td><button class="btn-del" onclick="removeRow(${n})" title="Remove">✕</button></td>`;
+  document.getElementById('items-body').appendChild(tr);
+  calcRow(n);
+}
+
+function calcRow(n) {
+  const qty  = parseFloat(document.getElementById(`q-${n}`)?.value) || 0;
+  const cost = parseFloat(document.getElementById(`c-${n}`)?.value) || 0;
+  const amtEl = document.getElementById(`a-${n}`);
+  if (amtEl) amtEl.textContent = fmtN(qty * cost);
+  const tqEl = document.getElementById(`tq-${n}`);
+  if (tqEl && (tqEl.value === '' || parseFloat(tqEl.value) === 0)) tqEl.value = qty || '';
+  recalcTotals();
+}
+
+function removeRow(n) { document.getElementById(`row-${n}`)?.remove(); recalcTotals(); }
+
+function recalcTotals() {
+  let totAmt = 0, totTQ = 0;
+  for (let n = 1; n <= itemCounter; n++) {
+    if (!document.getElementById(`row-${n}`)) continue;
+    const qty  = parseFloat(document.getElementById(`q-${n}`)?.value)  || 0;
+    const cost = parseFloat(document.getElementById(`c-${n}`)?.value)  || 0;
+    const tq   = parseFloat(document.getElementById(`tq-${n}`)?.value) || 0;
+    totAmt += qty * cost;
+    totTQ  += tq;
+  }
+  setEl('total-po-amt',    fmtN(totAmt));
+  setEl('total-today-qty', totTQ);
+}
+
+function getItems() {
+  const items = [];
+  for (let n = 1; n <= itemCounter; n++) {
+    if (!document.getElementById(`row-${n}`)) continue;
+    const desc = document.getElementById(`d-${n}`)?.value.trim();
+    if (!desc) continue;
+    const qty      = parseFloat(document.getElementById(`q-${n}`)?.value)  || 0;
+    const cost     = parseFloat(document.getElementById(`c-${n}`)?.value)  || 0;
+    const unit     = document.getElementById(`u-${n}`)?.value.trim() || 'pcs';
+    const todayQty = parseFloat(document.getElementById(`tq-${n}`)?.value) || 0;
+    items.push({ description:desc, unit, qty, unitCost:cost, amount:qty*cost, todayQty, todayAmount:todayQty*cost });
+  }
+  return items;
+}
+
+// ================================================================
+// EXCEL GENERATION
+// ================================================================
+async function generateExcel() {
+  const customer  = getVal('f-customer').trim();
+  const poNumber  = getVal('f-po-number').trim();
+  const drNumber  = getVal('f-dr-number').trim();
+  const poDate    = getVal('f-po-date');
+  const drDate    = getVal('f-dr-date');
+  const address   = getVal('f-address').trim();
+
+  if (!customer || !poNumber || !drNumber || !poDate) {
+    toast('⚠️ Fill in Customer, PO Number, DR Number, and PO Date.', 'err'); return;
+  }
+  const items = getItems();
+  if (!items.length) { toast('⚠️ Add at least one item.', 'err'); return; }
+
+  toast('📊 Building Excel workbook…');
+
+  try {
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'TINA ENTERPRISES DR System';
+    wb.created = new Date();
+
+    buildDRFile(wb,    { customer, address, poNumber, poDate, drNumber, drDate, items });
+    buildDRPrint(wb,   { customer, address, poNumber, poDate, drNumber, drDate, items });
+    buildDRHistory(wb, { customer, address, poNumber, poDate, drNumber, drDate, items });
+
+    state.xlsxBuffer = await wb.xlsx.writeBuffer();
+    showSummary({ customer, poNumber, drNumber, poDate, drDate, items });
+    setStepDone();
+    showSection('sec-download');
+
+  } catch (err) {
+    console.error(err);
+    toast('❌ Error generating Excel: ' + err.message, 'err');
+  }
+}
+
+// ---- STYLES ----
+const S = {
+  titleFont:  { name:'Arial', bold:true,  size:14 },
+  boldFont:   { name:'Arial', bold:true,  size:10 },
+  normFont:   { name:'Arial', bold:false, size:10 },
+  headerFill: { type:'pattern', pattern:'solid', fgColor:{ argb:'FF0A1628' } },
+  headerFont: { name:'Arial', bold:true,  size:10, color:{ argb:'FFC9A84C' } },
+  sectionFill:{ type:'pattern', pattern:'solid', fgColor:{ argb:'FF1E3A5F' } },
+  sectionFont:{ name:'Arial', bold:true,  size:10, color:{ argb:'FFFAF8F3' } },
+  totFill:    { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF5F5F0' } },
+  goldFill:   { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFAF6EC' } },
+  allBorder:  { top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} },
+  center:     { horizontal:'center', vertical:'middle' },
+  right:      { horizontal:'right',  vertical:'middle' },
+  left:       { horizontal:'left',   vertical:'middle' },
+};
+
+const PHP_FMT = '₱#,##0.00';
+const QTY_FMT = '#,##0';
+
+// ---- DR_FILE ----
+function buildDRFile(wb, d) {
+  const ws = wb.addWorksheet('DR_File', { pageSetup:{ paperSize:9, orientation:'landscape' } });
+  [8,35,8,14,16,8,16,8,16,8,16].forEach((w,i) => { ws.getColumn(i+1).width = w; });
+
+  ws.mergeCells('A1:K1'); ws.getRow(1).height = 18;
+  Object.assign(ws.getCell('A1'), { value:'TINA ENTERPRISES', font:{ ...S.titleFont, color:{argb:'FFC9A84C'} }, fill:S.headerFill, alignment:S.center });
+
+  ws.mergeCells('A2:K2'); ws.getRow(2).height = 15;
+  Object.assign(ws.getCell('A2'), { value:'Balo-i, Lanao del Norte', font:{ name:'Arial', size:10, color:{argb:'FFC9A84C'} }, fill:S.headerFill, alignment:S.center });
+
+  ws.mergeCells('A3:K3'); ws.getRow(3).height = 18;
+  Object.assign(ws.getCell('A3'), { value:'DELIVERY RECEIPT', font:{ name:'Arial', bold:true, size:12, color:{argb:'FFC9A84C'} }, fill:S.headerFill, alignment:S.center });
+
+  // Row 4: TO / PO No / DR No
+  ws.getRow(4).height = 18;
+  ws.getCell('A4').value = 'TO:';   ws.getCell('A4').font = S.boldFont;
+  ws.mergeCells('B4:E4');
+  ws.getCell('B4').value = d.customer; ws.getCell('B4').font = S.boldFont; ws.getCell('B4').border = { bottom:{style:'thin'} };
+  ws.getCell('F4').value = 'PO No:'; ws.getCell('F4').font = S.boldFont;
+  ws.mergeCells('G4:H4');
+  ws.getCell('G4').value = d.poNumber; ws.getCell('G4').font = S.boldFont; ws.getCell('G4').border = { bottom:{style:'thin'} };
+  ws.getCell('I4').value = 'DR No:'; ws.getCell('I4').font = S.boldFont;
+  ws.mergeCells('J4:K4');
+  ws.getCell('J4').value = d.drNumber; ws.getCell('J4').font = S.boldFont; ws.getCell('J4').border = { bottom:{style:'thin'} };
+
+  // Row 5: Address / PO Date / DR Date
+  ws.getRow(5).height = 16;
+  ws.getCell('A5').value = 'Address:';
+  ws.mergeCells('B5:E5');
+  ws.getCell('B5').value = d.address; ws.getCell('B5').border = { bottom:{style:'thin'} };
+  ws.getCell('F5').value = 'Date:'; ws.getCell('F5').font = S.normFont;
+  ws.mergeCells('G5:H5');
+  ws.getCell('G5').value = d.poDate ? new Date(d.poDate+'T00:00:00') : ''; ws.getCell('G5').numFmt = 'mmmm d, yyyy'; ws.getCell('G5').border = { bottom:{style:'thin'} };
+  ws.getCell('I5').value = 'Date:'; ws.getCell('I5').font = S.normFont;
+  ws.mergeCells('J5:K5');
+  ws.getCell('J5').value = d.drDate ? new Date(d.drDate+'T00:00:00') : ''; ws.getCell('J5').numFmt = 'mmmm d, yyyy'; ws.getCell('J5').border = { bottom:{style:'thin'} };
+
+  ws.getRow(6).height = 6;
+
+  // Row 7: Section group headers
+  ws.getRow(7).height = 16;
+  const sg = (addr, text) => { const c=ws.getCell(addr); c.value=text; c.font=S.sectionFont; c.fill=S.sectionFill; c.alignment=S.center; c.border=S.allBorder; };
+  ws.mergeCells('C7:E7'); sg('C7','PURCHASE ORDER');
+  ws.mergeCells('F7:G7'); sg('F7','TODAY DELIVERY');
+  ws.mergeCells('H7:I7'); sg('H7','PREVIOUS DELIVERY');
+  ws.mergeCells('J7:K7'); sg('J7','BALANCE DELIVERY');
+
+  // Row 8: Column headers
+  ws.getRow(8).height = 30;
+  ['ITEM NO.','DESCRIPTION','QTY','UNIT COST','AMOUNT','QTY','AMOUNT','QTY','AMOUNT','QTY','AMOUNT'].forEach((h,i) => {
+    const cell = ws.getCell(8, i+1);
+    cell.value = h; cell.font = S.headerFont; cell.fill = S.headerFill;
+    cell.alignment = { ...S.center, wrapText:true }; cell.border = S.allBorder;
+  });
+
+  // Row 9: Totals
+  ws.getRow(9).height = 16;
+  ws.mergeCells('A9:D9');
+  ws.getCell('A9').value = 'TOTAL'; ws.getCell('A9').font = S.boldFont; ws.getCell('A9').fill = S.totFill; ws.getCell('A9').border = S.allBorder;
+  const lastDataRow = 9 + d.items.length;
+  ['E9','G9','I9','K9'].forEach(addr => {
+    const col=addr[0], r1=10, r2=lastDataRow-1;
+    ws.getCell(addr).value = { formula:`SUM(${col}${r1}:${col}${r2})` };
+    ws.getCell(addr).numFmt = PHP_FMT; ws.getCell(addr).font = S.boldFont; ws.getCell(addr).fill = S.totFill; ws.getCell(addr).border = S.allBorder;
+  });
+  ['F9','H9','J9'].forEach(addr => {
+    const col=addr[0], r1=10, r2=lastDataRow-1;
+    ws.getCell(addr).value = { formula:`SUM(${col}${r1}:${col}${r2})` };
+    ws.getCell(addr).numFmt = QTY_FMT; ws.getCell(addr).font = S.boldFont; ws.getCell(addr).fill = S.totFill; ws.getCell(addr).border = S.allBorder;
+  });
+
+  // Data rows
+  d.items.forEach((item, idx) => {
+    const rowNum  = 10 + idx;
+    const balQty  = item.qty - item.todayQty;
+    ws.getRow(rowNum).height = 18;
+    const vals = [idx+1, item.description, item.qty, item.unitCost, item.qty*item.unitCost, item.todayQty, item.todayAmount, 0, 0, balQty, balQty*item.unitCost];
+    const fmts = [null, null, QTY_FMT, PHP_FMT, PHP_FMT, QTY_FMT, PHP_FMT, QTY_FMT, PHP_FMT, QTY_FMT, PHP_FMT];
+    vals.forEach((v, ci) => {
+      const cell = ws.getCell(rowNum, ci+1);
+      cell.value = v; cell.font = S.normFont; cell.border = S.allBorder;
+      cell.alignment = ci === 1 ? S.left : S.right;
+      if (ci === 0) cell.alignment = S.center;
+      if (fmts[ci]) cell.numFmt = fmts[ci];
+      if (ci >= 9)  cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFF8E8' } };
+      if (ci >= 5 && ci <= 6) cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEBF5EE' } };
+    });
+  });
+
+  // Notes
+  const notesRow = lastDataRow + 1;
+  ws.mergeCells(`A${notesRow}:K${notesRow}`);
+  ws.getCell(`A${notesRow}`).value = 'NOTE: FOR PARTIAL DELIVERY — Previous Delivery column data comes from Balance of previous DR. Continue until Balance = 0.';
+  ws.getCell(`A${notesRow}`).font = { name:'Arial', italic:true, size:9, color:{ argb:'FF5A5A50' } };
+}
+
+// ---- DR_PRINT ----
+function buildDRPrint(wb, d) {
+  const ws = wb.addWorksheet('DR_Print', { pageSetup:{ paperSize:9, orientation:'portrait', fitToPage:true } });
+  [8,8,30,8,12,10,16,16].forEach((w,i) => ws.getColumn(i+1).width = w);
+
+  ['TINA ENTERPRISES','Balo-i, Lanao del Norte','DELIVERY RECEIPT'].forEach((v,i) => {
+    ws.mergeCells(`A${i+1}:H${i+1}`);
+    const c = ws.getCell(`A${i+1}`);
+    c.value = v; c.fill = S.headerFill; c.alignment = S.center;
+    c.font = i === 0 ? { name:'Arial', bold:true, size:14, color:{argb:'FFC9A84C'} }
+                     : { name:'Arial', bold:i<2,   size:i===2?12:10, color:{argb:'FFC9A84C'} };
+    ws.getRow(i+1).height = i===0 ? 20 : 16;
+  });
+
+  ws.getRow(4).height = 18;
+  ws.getCell('A4').value = 'TO:'; ws.getCell('A4').font = S.boldFont;
+  ws.mergeCells('B4:D4');
+  ws.getCell('B4').value = { formula:'DR_File!B4' }; ws.getCell('B4').font = S.boldFont; ws.getCell('B4').border = { bottom:{style:'thin'} };
+  ws.getCell('E4').value = 'PO No:'; ws.getCell('E4').font = S.boldFont;
+  ws.mergeCells('F4:G4');
+  ws.getCell('F4').value = { formula:'DR_File!G4' }; ws.getCell('F4').font = S.boldFont; ws.getCell('F4').border = { bottom:{style:'thin'} };
+  ws.mergeCells('H4:H5');
+  ws.getCell('H4').value = 'DR No:'; ws.getCell('H4').font = S.boldFont;
+
+  ws.getRow(5).height = 18;
+  ws.getCell('A5').value = 'Address:';
+  ws.mergeCells('B5:D5');
+  ws.getCell('B5').value = { formula:'DR_File!B5' }; ws.getCell('B5').border = { bottom:{style:'thin'} };
+  ws.getCell('E5').value = 'Date:'; ws.getCell('E5').font = S.boldFont;
+  ws.mergeCells('F5:G5');
+  ws.getCell('F5').value = { formula:'DR_File!G5' }; ws.getCell('F5').numFmt = 'mmmm d, yyyy'; ws.getCell('F5').border = { bottom:{style:'thin'} };
+  ws.getRow(5).getCell(8).value = { formula:'DR_File!J4' }; ws.getRow(5).getCell(8).font = S.boldFont;
+
+  ws.getRow(6).height = 8;
+
+  ws.getRow(7).height = 20;
+  ['Item No.','','Description','','Quantity','Unit','Unit Price','Total Price'].forEach((h,i) => {
+    if (!h) return;
+    const cell = ws.getCell(7, i+1);
+    cell.value = h; cell.font = S.headerFont; cell.fill = S.headerFill; cell.alignment = S.center; cell.border = S.allBorder;
+  });
+
+  d.items.forEach((item, idx) => {
+    const rowNum = 8  + idx;
+    const srcRow = 10 + idx;
+    ws.getRow(rowNum).height = 18;
+    ws.getCell(rowNum, 1).value = idx+1; ws.getCell(rowNum, 1).alignment = S.center; ws.getCell(rowNum, 1).border = S.allBorder;
+    ws.mergeCells(rowNum, 2, rowNum, 4);
+    ws.getCell(rowNum, 2).value = { formula:`DR_File!B${srcRow}` }; ws.getCell(rowNum, 2).border = S.allBorder; ws.getCell(rowNum, 2).alignment = S.left;
+    ws.getCell(rowNum, 5).value = { formula:`DR_File!F${srcRow}` }; ws.getCell(rowNum, 5).numFmt = QTY_FMT; ws.getCell(rowNum, 5).alignment = S.right; ws.getCell(rowNum, 5).border = S.allBorder;
+    ws.getCell(rowNum, 6).value = item.unit; ws.getCell(rowNum, 6).alignment = S.center; ws.getCell(rowNum, 6).border = S.allBorder;
+    ws.getCell(rowNum, 7).value = { formula:`DR_File!D${srcRow}` }; ws.getCell(rowNum, 7).numFmt = PHP_FMT; ws.getCell(rowNum, 7).alignment = S.right; ws.getCell(rowNum, 7).border = S.allBorder;
+    ws.getCell(rowNum, 8).value = { formula:`DR_File!G${srcRow}` }; ws.getCell(rowNum, 8).numFmt = PHP_FMT; ws.getCell(rowNum, 8).alignment = S.right; ws.getCell(rowNum, 8).font = S.boldFont; ws.getCell(rowNum, 8).border = S.allBorder;
+  });
+
+  const totRow = 8 + d.items.length;
+  ws.getRow(totRow).height = 18;
+  ws.mergeCells(totRow, 1, totRow, 7);
+  ws.getCell(totRow, 1).value = 'TOTAL'; ws.getCell(totRow, 1).font = S.headerFont; ws.getCell(totRow, 1).fill = S.headerFill; ws.getCell(totRow, 1).alignment = S.right; ws.getCell(totRow, 1).border = S.allBorder;
+  ws.getCell(totRow, 8).value = { formula:'DR_File!G9' }; ws.getCell(totRow, 8).numFmt = PHP_FMT; ws.getCell(totRow, 8).font = S.headerFont; ws.getCell(totRow, 8).fill = S.headerFill; ws.getCell(totRow, 8).alignment = S.right; ws.getCell(totRow, 8).border = S.allBorder;
+
+  const statusRow = totRow + 2;
+  const allDone = d.items.every(i => i.qty - i.todayQty <= 0);
+  ws.mergeCells(`A${statusRow}:H${statusRow}`);
+  ws.getCell(`A${statusRow}`).value = allDone
+    ? '✅ COMPLETE DELIVERY — All items fully delivered as per PO.'
+    : '⏳ PARTIAL DELIVERY — Remaining balance to be delivered on next DR.';
+  ws.getCell(`A${statusRow}`).font = { name:'Arial', bold:true, size:10, color:{ argb: allDone?'FF2D7A4F':'FFC97A2D' } };
+  ws.getCell(`A${statusRow}`).alignment = S.center;
+
+  const ackRow = statusRow + 2;
+  ws.mergeCells(`A${ackRow}:H${ackRow}`);
+  ws.getCell(`A${ackRow}`).value = 'I hereby acknowledge receipt of the above item/s in perfect condition as per Purchase Order given.';
+  ws.getCell(`A${ackRow}`).font = { name:'Arial', italic:true, size:9 };
+  ws.getCell(`A${ackRow}`).alignment = { horizontal:'center' };
+
+  const sigRow = ackRow + 4;
+  ws.getRow(sigRow).height = 18;
+  ['Prepared by','Approved by','Received by'].forEach((lbl, i) => {
+    const col    = (i * 3) + 1;
+    const endCol = Math.min(col + 2, 8);
+    ws.mergeCells(sigRow, col, sigRow, endCol);
+    const cell = ws.getCell(sigRow, col);
+    cell.value = lbl; cell.font = S.boldFont; cell.alignment = S.center; cell.border = { top:{ style:'medium' } };
+  });
+
+  // Note: Received By is filled upon delivery only
+  const noteRow = sigRow + 2;
+  ws.getRow(noteRow).height = 14;
+  ws.mergeCells(noteRow, 7, noteRow, 8);
+  const noteCell = ws.getCell(noteRow, 7);
+  noteCell.value = '* Receiver fills name, date & signature upon acceptance of items.';
+  noteCell.font  = { name:'Arial', italic:true, size:8, color:{ argb:'FF888888' } };
+  noteCell.alignment = { horizontal:'left' };
+}
+
+// ---- DR_HISTORY ----
+function buildDRHistory(wb, d) {
+  const ws = wb.addWorksheet('DR_History', { pageSetup:{ paperSize:9, orientation:'landscape' } });
+  [8,18,16,16,18,16,16,16].forEach((w,i) => ws.getColumn(i+1).width = w);
+
+  ['TINA ENTERPRISES','Balo-i, Lanao del Norte','DELIVERY RECEIPT SUMMARY'].forEach((v,i) => {
+    ws.mergeCells(`A${i+1}:H${i+1}`);
+    const c = ws.getCell(`A${i+1}`);
+    c.value = v; c.fill = S.headerFill; c.alignment = S.center;
+    c.font = i===0 ? { name:'Arial', bold:true, size:14, color:{argb:'FFC9A84C'} }
+                   : { name:'Arial', bold:i<2,   size:i===2?12:10, color:{argb:'FFC9A84C'} };
+    ws.getRow(i+1).height = i===0 ? 20 : 16;
+  });
+
+  ws.getRow(4).height = 18;
+  ws.getCell('A4').value = 'School:'; ws.getCell('A4').font = S.boldFont;
+  ws.getCell('B4').value = { formula:'DR_File!B4' }; ws.getCell('B4').font = S.boldFont;
+  ws.getRow(5).height = 18;
+  ws.getCell('A5').value = 'Address:';
+  ws.getCell('B5').value = { formula:'DR_File!B5' };
+  ws.getCell('G5').value = 'Date:'; ws.getCell('G5').font = S.boldFont;
+  ws.getCell('H5').value = { formula:'TODAY()' }; ws.getCell('H5').numFmt = 'mmmm d, yyyy';
+  ws.getRow(6).height = 8;
+
+  ws.getRow(7).height = 18;
+  ws.mergeCells('A7:A8');
+  const ah7 = ws.getCell('A7'); ah7.value='ITEM NO.'; ah7.font=S.headerFont; ah7.fill=S.headerFill; ah7.alignment={ ...S.center, wrapText:true }; ah7.border=S.allBorder;
+  ws.mergeCells('B7:D7');
+  const bh7 = ws.getCell('B7'); bh7.value='PURCHASE ORDER'; bh7.font=S.headerFont; bh7.fill=S.headerFill; bh7.alignment=S.center; bh7.border=S.allBorder;
+  ws.mergeCells('E7:H7');
+  const eh7 = ws.getCell('E7'); eh7.value='DELIVERY'; eh7.font=S.headerFont; eh7.fill=S.headerFill; eh7.alignment=S.center; eh7.border=S.allBorder;
+
+  ws.getRow(8).height = 18;
+  [null,'PO No.','DATE','AMOUNT','DR No.','AS OF TODAY','PREVIOUS','BALANCE'].forEach((h,i) => {
+    if (!h) return;
+    const cell = ws.getCell(8, i+1);
+    cell.value=h; cell.font=S.headerFont; cell.fill=S.headerFill; cell.alignment={ ...S.center, wrapText:true }; cell.border=S.allBorder;
+  });
+
+  const rowNum = 9;
+  ws.getRow(rowNum).height = 18;
+  const rc = (col, val, opts={}) => {
+    const cell = ws.getCell(rowNum, col);
+    cell.value = val; cell.border = S.allBorder;
+    if (opts.fmt)  cell.numFmt    = opts.fmt;
+    if (opts.font) cell.font      = opts.font;
+    if (opts.align)cell.alignment = opts.align;
+    if (opts.fill) cell.fill      = opts.fill;
+  };
+  rc(1, 1,                              { align:S.center });
+  rc(2, { formula:'DR_File!G4' },       { font:S.boldFont });
+  rc(3, { formula:'DR_File!G5' },       { fmt:'mmmm d, yyyy', align:S.center });
+  rc(4, { formula:'DR_File!E9' },       { fmt:PHP_FMT, font:S.boldFont, align:S.right });
+  rc(5, { formula:'DR_File!J4' },       { font:S.boldFont, align:S.center });
+  rc(6, { formula:'DR_File!G9' },       { fmt:PHP_FMT, align:S.right, fill:{ type:'pattern', pattern:'solid', fgColor:{ argb:'FFEBF5EE' } } });
+  rc(7, { formula:'DR_File!I9' },       { fmt:PHP_FMT, align:S.right });
+  const allDone = d.items.every(i => i.qty - i.todayQty <= 0);
+  rc(8, { formula:'DR_File!K9' },       { fmt:PHP_FMT, align:S.right,
+    font:{ ...S.boldFont, color:{ argb: allDone?'FF2D7A4F':'FFC97A2D' } },
+    fill:{ type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFF8E8' } } });
+
+  for (let r = rowNum+1; r <= rowNum+10; r++) {
+    ws.getRow(r).height = 16;
+    for (let c = 1; c <= 8; c++) ws.getCell(r, c).border = S.allBorder;
+    ws.getCell(r, 1).value = { formula:`IF(B${r}="","",A${r-1}+1)` };
+    ws.getCell(r, 1).alignment = S.center;
+  }
+
+  const noteRow = rowNum + 12;
+  ws.mergeCells(`A${noteRow}:H${noteRow}`);
+  ws.getCell(`A${noteRow}`).value = 'NOTE: Add new rows below for each subsequent DR on this PO. Balance carries forward until Balance = ₱0.00 (PO Complete).';
+  ws.getCell(`A${noteRow}`).font = { name:'Arial', italic:true, size:9, color:{ argb:'FF5A5A50' } };
+}
+
+// ================================================================
+// DOWNLOAD
+// ================================================================
+function downloadExcel() {
+  if (!state.xlsxBuffer) { toast('No file ready yet.', 'err'); return; }
+  const drNum = getVal('f-dr-number').replace(/[^a-zA-Z0-9\-_]/g, '_');
+  const poNum = getVal('f-po-number').replace(/[^a-zA-Z0-9\-_]/g, '_');
+  const blob  = new Blob([state.xlsxBuffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement('a');
+  a.href = url; a.download = `DR_${poNum}_${drNum}.xlsx`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('💾 Excel downloaded!');
+}
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+function goToStep2() {
+  showSection('sec-review');
+  document.getElementById('st1').classList.remove('active');
+  document.getElementById('st1').classList.add('done');
+  document.getElementById('st2').classList.add('active');
+}
+
+function goBack() {
+  showSection('sec-upload');
+  document.getElementById('st2').classList.remove('active');
+  document.getElementById('st1').classList.remove('done');
+  document.getElementById('st1').classList.add('active');
+}
+
+function setStepDone() {
+  document.getElementById('st2').classList.remove('active');
+  document.getElementById('st2').classList.add('done');
+  document.getElementById('st3').classList.add('active');
+}
+
+function resetApp() {
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  ['st1','st2','st3'].forEach(id => { document.getElementById(id).classList.remove('active','done'); });
+  document.getElementById('st1').classList.add('active');
+  document.getElementById('items-body').innerHTML = '';
+  document.getElementById('file-preview').style.display   = 'none';
+  document.getElementById('extract-status').style.display = 'none';
+  document.getElementById('file-inp').value = '';
+  state = { fileData:null, fileType:null, fileName:null, extractedItems:[], xlsxBuffer:null };
+  itemCounter = 0;
+  showSection('sec-upload');
+}
+
+function showSection(id) {
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showSummary({ customer, poNumber, drNumber, items }) {
+  const totAmt = items.reduce((s,i) => s + i.amount, 0);
+  const todAmt = items.reduce((s,i) => s + i.todayAmount, 0);
+  const balAmt = totAmt - todAmt;
+  const allDone = balAmt <= 0;
+  document.getElementById('summary-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+      <div style="background:var(--gray-100);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Customer</div>
+        <div style="font-weight:700;font-size:15px;">${esc(customer)}</div>
+      </div>
+      <div style="background:var(--gray-100);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">PO Number</div>
+        <div style="font-weight:700;font-size:15px;">${esc(poNumber)}</div>
+      </div>
+      <div style="background:var(--gold-pale);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">DR Number</div>
+        <div style="font-weight:700;font-size:15px;color:var(--navy);">${esc(drNumber)}</div>
+      </div>
+      <div style="background:var(--gray-100);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">PO Total</div>
+        <div style="font-weight:700;font-size:15px;">${fmtN(totAmt)}</div>
+      </div>
+      <div style="background:rgba(45,122,79,.05);border-radius:8px;padding:16px;">
+        <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Today's Delivery</div>
+        <div style="font-weight:700;font-size:15px;color:var(--success);">${fmtN(todAmt)}</div>
+      </div>
+      <div style="background:${allDone?'rgba(45,122,79,.05)':'rgba(201,122,45,.05)'};border-radius:8px;padding:16px;">
+        <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Balance</div>
+        <div style="font-weight:700;font-size:15px;color:${allDone?'var(--success)':'var(--warning)'};">${fmtN(balAmt)} ${allDone?'✅':'⏳'}</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--gray-400);">📊 <strong>${items.length} items</strong> across 3 sheets: <strong>DR_File</strong> (master data), <strong>DR_Print</strong> (print-ready), <strong>DR_History</strong> (tracking).</p>`;
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function fmtN(n)  { return '₱' + Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function getVal(id){ return document.getElementById(id)?.value || ''; }
+function setVal(id,v){ const el=document.getElementById(id); if(el) el.value=v; }
+function setEl(id,v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+function esc(s)   { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg, type='ok') {
+  const c = document.getElementById('toast-cont');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type==='err' ? ' err' : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+</script>
+</body>
+</html>
