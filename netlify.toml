@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+  publish   = "."
+
+[[redirects]]
+  from   = "/api/extract"
+  to     = "/.netlify/functions/extract"
+  status = 200
